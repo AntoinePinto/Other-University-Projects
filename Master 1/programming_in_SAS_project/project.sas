@@ -10,15 +10,15 @@
 /* Question 1 */
 /**************/
 
-/* Au lieu de répéter 8 fois un code similaire d'importation des données, nous créons une macro fonction permettant d'importer les différentes 
+/* Au lieu de rÃ©pÃ©ter 8 fois un code similaire d'importation des donnÃ©es, nous crÃ©ons une macro fonction permettant d'importer les diffÃ©rentes 
 tables.*/
 
-libname projet "C:\Users\Antoi\OneDrive\Université\Master 1\Semestre 2\SAS\Projet";
+libname projet "C:\Users\Antoi\OneDrive\UniversitÃ©\Master 1\Semestre 2\SAS\Projet";
 
 %macro importer_data(tab_name, file_name, add_date, variab1, variab2, variab3, variab4, variab5, variab6, variab7, variab8, variab9, variab10, variab11, variab12, variab13, variab14, variab15, variab16 );  
 
 	data projet.&tab_name;
-		infile "C:\Users\Antoi\OneDrive\Université\Master 1\Semestre 2\SAS\Projet\Données - projet-20210130\Fichiers de données\&file_name"
+		infile "C:\Users\Antoi\OneDrive\UniversitÃ©\Master 1\Semestre 2\SAS\Projet\DonnÃ©es - projet-20210130\Fichiers de donnÃ©es\&file_name"
 			 dlm = ";"
 	         firstobs=2
 	         DSD;
@@ -45,8 +45,8 @@ libname projet "C:\Users\Antoi\OneDrive\Université\Master 1\Semestre 2\SAS\Proje
      ;
  	run;
 
-	/* Certaines tables contiennent des dates qui doivent être formatées. Ainsi, nous posons une condition dans la fonction,
-	celle-ci peut être validée ou non par l'usagé, en fonction de la présence d'une variable "date" dans les données. */
+	/* Certaines tables contiennent des dates qui doivent Ãªtre formatÃ©es. Ainsi, nous posons une condition dans la fonction,
+	celle-ci peut Ãªtre validÃ©e ou non par l'usagÃ©, en fonction de la prÃ©sence d'une variable "date" dans les donnÃ©es. */
 
 %IF &add_date = "yes" %THEN 
 %do;
@@ -68,9 +68,9 @@ run;
 
 %mend;
 
-/* Option yearcutoff = 1900 prend 1900 comme année de référence lorsque l'on rencontre une valeur annuelle à deux chiffres,  
-ce qui nous permet une cohérence dans de futurs résultats.
- Sans cette commande, nous obtenons des âges négatifs. */
+/* Option yearcutoff = 1900 prend 1900 comme annÃ©e de rÃ©fÃ©rence lorsque l'on rencontre une valeur annuelle Ã  deux chiffres,  
+ce qui nous permet une cohÃ©rence dans de futurs rÃ©sultats.
+ Sans cette commande, nous obtenons des Ã¢ges nÃ©gatifs. */
 
 option yearcutoff = 1900;
 
@@ -83,7 +83,7 @@ option yearcutoff = 1900;
 %importer_data(order,order.txt, "no", order_id, account_id, bank_to $, account_to, amount, k_symbol $);
 %importer_data(trans,trans.txt, "yes", trans_id, account_id, date, type $, operation $, amount, balance, k_symbol $, bank $, account);
 
-/* La table Client contient une spécialité : la colonne "birth_corr" contient l'information du sexe de l'individu. 
+/* La table Client contient une spÃ©cialitÃ© : la colonne "birth_corr" contient l'information du sexe de l'individu. 
 En effet, si l'individu est une femme, alors birth_corr = birth_number - 5000. */
 
 data projet.client;
@@ -97,7 +97,7 @@ data projet.client;
  
 run;
 
-/* Création d'une variable permettant de recoder la date */
+/* CrÃ©ation d'une variable permettant de recoder la date */
 
 data projet.card;
 
@@ -135,7 +135,7 @@ quit ;
 /* Question 4 */
 /**************/
 
-/* Nombre de clients par sexe en fonction du district et de la région */
+/* Nombre de clients par sexe en fonction du district et de la rÃ©gion */
 
 proc sql ;
 
@@ -164,7 +164,7 @@ proc sql ;
 
 	select A.district_id label = "Identifiant district",
 		   B.district_name label = "Nom du district",
-		   B.region lavel = "Région",
+		   B.region lavel = "RÃ©gion",
 		   count(distinct A.client_id) as nb_client label = "Nombre de clients",
 		   sum(A.sex = "H") as clients_hommes,
 		   sum(A.sex = "F") as clients_femmes
@@ -181,7 +181,7 @@ quit ;
 /* Question 6 */
 /**************/
 
-/* Nombre d'ordres pour les clients possédant au moins un compte, en fonction de l'âge */
+/* Nombre d'ordres pour les clients possÃ©dant au moins un compte, en fonction de l'Ã¢ge */
 
 proc sql ;
 
@@ -201,7 +201,7 @@ quit ;
 /* Question 7 */
 /**************/
 
-/* Informations concernant les prêts telles que leur nombre ou leur durée en fonction du type de carte */
+/* Informations concernant les prÃªts telles que leur nombre ou leur durÃ©e en fonction du type de carte */
 
 proc sql ;
 
@@ -210,13 +210,13 @@ proc sql ;
 			min(C.amount) format=dollar16. as min_amount label = "Montant minimum des emprunts",
 			avg(C.amount) format=dollar16. as mean_amount label = "Montant moyen des emprunts",
 			max(C.amount) format=dollar16. as max_amount label = "Montant maximum des emprunts",
-			min(C.duration) as min_duration label = "Durée minimum des emprunts",
-			avg(C.duration) format = 6. as mean_duration label = "Durée minimum des emprunts",
-			max(C.duration) as max_duration label = "Durée minimum des emprunts",
-			sum(C.status = "A") as nb_A label = "Nombre d'emprunts catégorie A",
-			sum(C.status = "B") as nb_B label = "Nombre d'emprunts catégorie B",
-			sum(C.status = "C") as nb_C label = "Nombre d'emprunts catégorie C",
-			sum(C.status = "D") as nb_D label = "Nombre d'emprunts catégorie D"
+			min(C.duration) as min_duration label = "DurÃ©e minimum des emprunts",
+			avg(C.duration) format = 6. as mean_duration label = "DurÃ©e minimum des emprunts",
+			max(C.duration) as max_duration label = "DurÃ©e minimum des emprunts",
+			sum(C.status = "A") as nb_A label = "Nombre d'emprunts catÃ©gorie A",
+			sum(C.status = "B") as nb_B label = "Nombre d'emprunts catÃ©gorie B",
+			sum(C.status = "C") as nb_C label = "Nombre d'emprunts catÃ©gorie C",
+			sum(C.status = "D") as nb_D label = "Nombre d'emprunts catÃ©gorie D"
 
 	from projet.card as A, projet.disp as B , projet.loan as C
 	where A.disp_id = B.disp_id and B.account_id = C.account_id
@@ -231,8 +231,8 @@ quit ;
 /* Question 8 */
 /**************/
 
-/* Nombre de compte ayant bénéficié d'un emprunt par type de carte et catégorie d'emprunt suivi de statistiques
-   quantitatives sur le montant et la durée du prêt */
+/* Nombre de compte ayant bÃ©nÃ©ficiÃ© d'un emprunt par type de carte et catÃ©gorie d'emprunt suivi de statistiques
+   quantitatives sur le montant et la durÃ©e du prÃªt */
 
 proc sql ;
 
@@ -243,12 +243,12 @@ proc sql ;
 			min(C.amount) format=dollar16. as min_amount label = "Montant minimum des emprunts",
 			max(C.amount) format=dollar16. as max_amount label = "Montant maximum des emprunts",
 			var(C.amount) as var_amount label = "Variance des montants",
-			std(C.amount) as sd_amount label = "Écart moyen des montants",
-			avg(C.duration) as mean_duration format = 10. label = "Durée minimum des emprunts",
-			min(C.duration) as min_duration label = "Durée minimum des emprunts",
-			max(C.duration) as max_duration label = "Durée minimum des emprunts",
-			var(C.duration) as var_duration label = "Variance des durées",
-			std(C.duration) as sd_duration label = "Écart moyen des durées"
+			std(C.amount) as sd_amount label = "Ã‰cart moyen des montants",
+			avg(C.duration) as mean_duration format = 10. label = "DurÃ©e minimum des emprunts",
+			min(C.duration) as min_duration label = "DurÃ©e minimum des emprunts",
+			max(C.duration) as max_duration label = "DurÃ©e minimum des emprunts",
+			var(C.duration) as var_duration label = "Variance des durÃ©es",
+			std(C.duration) as sd_duration label = "Ã‰cart moyen des durÃ©es"
 
 	from projet.card as A, projet.disp as B , projet.loan as C
 	where A.disp_id = B.disp_id and B.account_id = C.account_id
@@ -263,7 +263,7 @@ quit ;
 /* Question 9 */
 /**************/
 
-/* Création d'une table qui regroupe les informations de chaque clients en y ajoutant leur âge.
+/* CrÃ©ation d'une table qui regroupe les informations de chaque clients en y ajoutant leur Ã¢ge.
    On fusionne les tables clients et disp avec un full join car leur relation est 1-1.
    Afin de garder toutes les lignes de la table clients, on effectue un left join lors de la fusion avec
    la table card 
@@ -309,20 +309,20 @@ quit;
 /*   PARTIE II : SAS MACRO     /
 /******************************/
 
-/* A - Sondage aléatoire simple (AS) */
+/* A - Sondage alÃ©atoire simple (AS) */
 
 /**************/
 /* Question 1 */
 /**************/
 
-/* Création d'un échantillon aléatoire de 200 observations sur la table "client_macro" */
+/* CrÃ©ation d'un Ã©chantillon alÃ©atoire de 200 observations sur la table "client_macro" */
 
 data projet.test;
 	set projet.client_macro;
 		 alea = ranuni(0);
 run;
 
-/* Tri des observations en fonction de l'alée */
+/* Tri des observations en fonction de l'alÃ©e */
 
 proc sort data=projet.test out=projet.test;
    by alea ;
@@ -336,7 +336,7 @@ run;
 /* Question 2 */
 /**************/
 
-/* Ajout de paramètre permettant de choisir la taille de l'échantillon, la table à échantilloner et le nom de la table
+/* Ajout de paramÃ¨tre permettant de choisir la taille de l'Ã©chantillon, la table Ã  Ã©chantilloner et le nom de la table
 de sortie */
 
 %let tab_entree = client_macro;
@@ -360,7 +360,7 @@ run;
 /* Question 3 */
 /**************/
 
-/* Ici, l'usager ne choisit plus un nombre d'observations mais un pourcentage d'observation à extraire */
+/* Ici, l'usager ne choisit plus un nombre d'observations mais un pourcentage d'observation Ã  extraire */
 
 %let tab_entree = client_macro;
 %let tab_sortie = client_macro1;
@@ -375,8 +375,8 @@ proc sort data=projet.&tab_sortie out=projet.&tab_sortie;
    by alea ;
 run;
 
-/* On récupère le nombre de lignes de la table client_macro pour pouvoir ensuite 
-  en retirer le pourcentage souhaité d'observations */
+/* On rÃ©cupÃ¨re le nombre de lignes de la table client_macro pour pouvoir ensuite 
+  en retirer le pourcentage souhaitÃ© d'observations */
 
 data _null_;
 	set projet.&tab_sortie end = last;
@@ -391,7 +391,7 @@ run;
 /* Question 4 */
 /**************/
 
-/* Création d'une macro fonction permettant de prélever un échantillon aléatoire sur une table de données */
+/* CrÃ©ation d'une macro fonction permettant de prÃ©lever un Ã©chantillon alÃ©atoire sur une table de donnÃ©es */
 
 %macro AS(tab_entree, tab_sortie, part_obs);
 
@@ -418,7 +418,7 @@ run;
 %AS(client_macro, client_macro1, 20)
 
 
-/* B - Sondage aléatoire stratifié */
+/* B - Sondage alÃ©atoire stratifiÃ© */
 
 
 /**************/
@@ -427,7 +427,7 @@ run;
 
 %macro ASTR(lib, tab, var_strat);
 
-	/* Le proc sort permet d'isoler dans un tableau les modalités clés non dupliquées */
+	/* Le proc sort permet d'isoler dans un tableau les modalitÃ©s clÃ©s non dupliquÃ©es */
 	
 /*1*/
 
@@ -440,8 +440,8 @@ run;
 		where &var_strat <>"";
 	run;
 
-	/* Le data _null_ permet de créer des macros variables dans lesquelles sont introduites 
-		le nombre de modalités et leur valeur */
+	/* Le data _null_ permet de crÃ©er des macros variables dans lesquelles sont introduites 
+		le nombre de modalitÃ©s et leur valeur */
 
 	data _null_;
 		set &lib..stratif end = last;
@@ -449,13 +449,13 @@ run;
 		If last then call symput("N_modalite", _N_);
 	run;
 
-	/* Le code ci-dessous permet d'afficher un message à l'utilisateur (nombre de modalités et 
-	valeur des modalités */
+	/* Le code ci-dessous permet d'afficher un message Ã  l'utilisateur (nombre de modalitÃ©s et 
+	valeur des modalitÃ©s */
 	
-	%put "Il y a &N_modalite modalités dans cette variable";
+	%put "Il y a &N_modalite modalitÃ©s dans cette variable";
 
 	%do i=1 %to &N_modalite ;
-		   %put "La modalité &i est &&&modalite&i";
+		   %put "La modalitÃ© &i est &&&modalite&i";
 	%end;
 
 
@@ -484,8 +484,8 @@ run;
 		If last then call symput("N_modalite", _N_);
 	run;
 
-	/* Cette boucle permet de  créer, pour chaque modalité, un tableau ne contenant
-	que les informations relatives à cette modalités.*/
+	/* Cette boucle permet de  crÃ©er, pour chaque modalitÃ©, un tableau ne contenant
+	que les informations relatives Ã  cette modalitÃ©s.*/
 
 	%do i=1 %to &N_modalite;
 
@@ -498,10 +498,10 @@ run;
 
 	%end;
 
-	%put "Il y a &N_modalite modalités dans cette variable";
+	%put "Il y a &N_modalite modalitÃ©s dans cette variable";
 
 	%do i=1 %to &N_modalite ;
-		   %put "La modalité &i est &&&modalite&i";
+		   %put "La modalitÃ© &i est &&&modalite&i";
 	%end;
 
 %mend;
@@ -535,17 +535,17 @@ run;
 			where compress(&var_strat)="&&&modalite&i";
 		run;
 
-		/* Ici, nous faisons appel à la macro utilisée dans la partie A, afin de créer une nouvelle
-		table représentant l'échantillon pour la modalité concernée*/
+		/* Ici, nous faisons appel Ã  la macro utilisÃ©e dans la partie A, afin de crÃ©er une nouvelle
+		table reprÃ©sentant l'Ã©chantillon pour la modalitÃ© concernÃ©e*/
 		
 		%AS(&&&modalite&i, echant&&&modalite&i, &pourcent_obs);
 
 	%end;
 
-	%put "Il y a &N_modalite modalités dans cette variable";
+	%put "Il y a &N_modalite modalitÃ©s dans cette variable";
 
 	%do i=1 %to &N_modalite ;
-		   %put "La modalité &i est &&&modalite&i";
+		   %put "La modalitÃ© &i est &&&modalite&i";
 	%end;
 
 %mend;
@@ -584,7 +584,7 @@ run;
 		
 	%end;
 
-	/* La commande ci-dessous permet de concatener l'ensemble des échantillons en une seule table */
+	/* La commande ci-dessous permet de concatener l'ensemble des Ã©chantillons en une seule table */
 
 	data &lib..echantillon_final;
 	  set
@@ -594,10 +594,10 @@ run;
 		;
 	run;
 	
-	%put "Il y a &N_modalite modalités dans cette variable";
+	%put "Il y a &N_modalite modalitÃ©s dans cette variable";
 
 	%do i=1 %to &N_modalite ;
-		   %put "La modalité &i est &&&modalite&i";
+		   %put "La modalitÃ© &i est &&&modalite&i";
 	%end;
 
 
@@ -631,9 +631,9 @@ run;
 		If last then call symput("N_modalite", _N_);
 	run;
 
-	/* C'est au niveau du where que la condition change lorsque la variable stratifiée est sous
-	format numérique. Ainsi, nous prenons en compte cette différence en rajoutant un IF, qui exécute
-	un certain code en fonction du format de notre variable stratifiée*/
+	/* C'est au niveau du where que la condition change lorsque la variable stratifiÃ©e est sous
+	format numÃ©rique. Ainsi, nous prenons en compte cette diffÃ©rence en rajoutant un IF, qui exÃ©cute
+	un certain code en fonction du format de notre variable stratifiÃ©e*/
 
 	%if &format = "numeric" %then
 
@@ -668,10 +668,10 @@ run;
 		;
 	run;
 	
-	%put "Il y a &N_modalite modalités dans cette variable";
+	%put "Il y a &N_modalite modalitÃ©s dans cette variable";
 
 	%do i=1 %to &N_modalite ;
-		   %put "La modalité &i est &&&modalite&i";
+		   %put "La modalitÃ© &i est &&&modalite&i";
 	%end;
 
 
@@ -709,8 +709,8 @@ run;
 		If last then call symput("N_modalite", _N_);
 	run;
 
-	/* Dans la boucle de création des échantillons, nous créons, à chaque itération, une macro-variable 
-	prenant la valeur du nombre d'observations dans chaque échantillon.*/
+	/* Dans la boucle de crÃ©ation des Ã©chantillons, nous crÃ©ons, Ã  chaque itÃ©ration, une macro-variable 
+	prenant la valeur du nombre d'observations dans chaque Ã©chantillon.*/
 	
 	%if &format = "numeric" %then
 
@@ -766,20 +766,20 @@ run;
 		If last then call symput("taille_final", _N_);
 	run;
 
-	%put "Il y a &N_modalite modalités dans cette variable";
+	%put "Il y a &N_modalite modalitÃ©s dans cette variable";
 
 	%do i=1 %to &N_modalite ;
-		   %put "La modalité &i est &&&modalite&i";
+		   %put "La modalitÃ© &i est &&&modalite&i";
 	%end;
 
-	/* Le code ci-dessous permet d'afficher le nombre d'observations pour chaque échantillon et pour la 
+	/* Le code ci-dessous permet d'afficher le nombre d'observations pour chaque Ã©chantillon et pour la 
 	table finale.*/
 
 	%do i=1 %to &N_modalite ;
-		   %put "Le nombre d'observations de l'échantillon &&&modalite&i est de &&&taille_sample&i";
+		   %put "Le nombre d'observations de l'Ã©chantillon &&&modalite&i est de &&&taille_sample&i";
 	%end;
 
-	%put "Le nombre d'observations de l'échantillon total est de &taille_final";
+	%put "Le nombre d'observations de l'Ã©chantillon total est de &taille_final";
 
 	%put &modalite1;
 
