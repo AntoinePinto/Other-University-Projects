@@ -2,7 +2,7 @@
 /* Importing the database */
 /**************************/
 
-use "C:\Users\Antoi\OneDrive\Université\Master 1\Semestre 2\Logiciels pour économistes\projet\bien_etre\database.dta", clear
+use "C:\Users\Antoi\OneDrive\UniversitÃ©\Master 1\Semestre 2\Logiciels pour Ã©conomistes\projet\bien_etre\database.dta", clear
 
 /* We keep only the variables that we need and we rename them */
 
@@ -151,7 +151,7 @@ use "C:\Users\Antoi\OneDrive\Université\Master 1\Semestre 2\Logiciels pour écono
 
 program prepare_data
 
-	use "C:\Users\Antoi\OneDrive\Université\Master 1\Semestre 2\Logiciels pour économistes\projet\bien_etre\database.dta", clear
+	use "C:\Users\Antoi\OneDrive\UniversitÃ©\Master 1\Semestre 2\Logiciels pour Ã©conomistes\projet\bien_etre\database.dta", clear
 	
 	keep F118 S003 X001 X002 S020 F034 E033 X023 X023R X025A2 
 
