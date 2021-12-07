@@ -1,0 +1,512 @@
+---
+title: "Consommation de cannabis"
+output:
+    rmdformats::readthedown:
+      code_folding: none
+      self_contained: true
+      lightbox: true
+      highlight: tango
+---
+
+```{r setup, include=FALSE,warning=FALSE, comment=NA, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = FALSE, warning = FALSE, message = FALSE)
+```
+
+Importation des packages
+
+```{r,echo=TRUE, message=FALSE,warning=FALSE}
+library(readxl)  
+library(ggplot2)
+library(caret)
+library(reshape2)
+library(rpart)
+library(mltools)
+library(data.table)
+library(class)
+library(ipred)
+library(randomForest)
+library(adabag)
+library(rpart.plot)
+library(kableExtra)
+library(GGally)
+```
+
+Fonction permettant la mise en forme des tableaux
+
+```{r,echo=TRUE, message=FALSE,warning=FALSE}
+kable_plus <- function(df,
+                       escape_ = TRUE,
+                       caption_ = NULL,
+                       col_names = NA,
+                       row_names = NA,
+                       bootstrap_options_ = c("striped", "hover")){
+  df %>% kable(escape = escape_, align = "c", caption = caption_, col.names = col_names, row.names = row_names) %>% 
+  kable_styling(bootstrap_options = bootstrap_options_, position = "center", full_width = F) %>%
+      row_spec(0, background = "#211103", color = "white", bold = T)}
+```
+
+# Recodage des données
+
+On importe les données.
+
+```{r}
+df <- read.table("C:/Users/Antoi/OneDrive/Université/Master 1/Semestre 2/Machine Learning/drug_consumption.txt", sep = ",")
+
+colnames(df) <- c("id", "age", "gender", "educ", "country", "ethni", "neuroticism", "extraversion", "openess", "agreableness", "conscientiousness", "impulsiveness", "seeing_sensation", "class_alcohol", "class_amphetamine", "class_amyl_nitrite", "class_benzodiazepine", "class_cafeine", "class_canabis", "class_chocolate", "class_cocaine", "class_crack", "class_ecstasy", "class_heroin", "class_ketamine", "class_legalh", "class_lsd", "class_meth", "class_mushrooms", "class_nicotine", "class_semer", "class_vls")
+
+kable_plus(head(df))
+```
+
+La boucle suivante permet d'importer les données de recodage synthetisées dans un fichier excel. 
+
+```{r}
+for (i in c("age", "gender", "educ", "country", "ethni")){
+  assign(paste("recod_",i,sep=""), read_excel("C:/Users/Antoi/OneDrive/Université/Master 1/Semestre 2/Machine Learning/recodage.xlsx", sheet = i, col_names = F))
+  
+  df[, i] <- as.character(df[, i])
+  
+  for (j in 1:nrow(get(paste("recod_",i,sep="")))){
+    df[,i][df[,i] == as.character(get(paste("recod_",i,sep=""))[j,1])] <- as.character(get(paste("recod_",i,sep=""))[j,2])
+    }
+}
+
+assign(paste("recod_","use",sep=""), read_excel("C:/Users/Antoi/OneDrive/Université/Master 1/Semestre 2/Machine Learning/recodage.xlsx", sheet = "use", col_names = F))
+
+for (j in 14:32){
+for (i in 1:nrow(recod_use)){
+  df[,j][df[,j] == as.character(recod_use[i,1])] <- as.character(recod_use[i,2])
+}
+}
+
+remove(recod_age, recod_country, recod_educ, recod_ethni, recod_gender, recod_use)
+```
+
+On recode également les variables concernant les scores psychologiques en suivant les définitions de la description de la base de données.
+
+```{r}
+recod_neuroticism <- cbind(unique(df$neuroticism)[order(unique(df$neuroticism))],
+                           12:60)
+
+recod_extraversion <- cbind(unique(df$extraversion)[order(unique(df$extraversion))],
+                           c(16,18:56,58,59))
+
+recod_openess <- cbind(unique(df$openess)[order(unique(df$openess))],
+                           c(24,26,28:60))
+
+recod_agreableness <- cbind(unique(df$agreableness)[order(unique(df$agreableness))],
+                           c(12,16,18,23:60))
+
+recod_conscientiousness <- cbind(unique(df$conscientiousness)[order(unique(df$conscientiousness))],
+                           c(17,19:57,59))
+
+
+for (i in c("neuroticism", "extraversion", "openess", "agreableness", "conscientiousness")){
+  
+  
+  
+  for (j in 1:nrow(get(paste("recod_",i,sep="")))){
+    df[,i][df[,i] == get(paste("recod_", i, sep=""))[j,1]] <- get(paste("recod_", i, sep=""))[j,2]
+  }
+}
+
+remove(recod_neuroticism, recod_extraversion, recod_openess, recod_agreableness, recod_conscientiousness)
+```
+
+
+```{r}
+df$age <- as.factor(df$age)
+df$gender <- as.factor(df$gender)
+df$educ <- as.factor(df$educ)
+df$country <- as.factor(df$country)
+df$ethni <- as.factor(df$ethni)
+
+for(i in 14:32){
+  df[,i] <- as.factor(df[,i])
+}
+```
+
+# Variable dépendente et statistiques descriptives
+
+On va se concentrer sur la consommation de canabis. On crée notre variables dépendente qui prend la valeur "User" si l'individu a consommé du canabis dans dans la dernière année et "Not user" sinon.
+
+```{r}
+df$canabis_user <- ifelse(df$class_canabis %in% c("Never Used", "Used over a Decade Ago", "Used in Last Decade"), "Not user", "User")
+
+table(df$canabis_user)
+```
+
+Quelques graphiques:
+
+```{r}
+ggplot(df) +
+  geom_bar(aes(x = age, fill = canabis_user), position = "fill") +
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+```{r}
+ggplot(df) +
+  geom_bar(aes(x = gender, fill = canabis_user), position = "fill") +
+  theme(axis.text.x = element_text(angle = 30))
+```
+
+Nuage de point pour certaines variables numériques:
+
+```{r}
+ggpairs(df[,7:11], aes(colour = df$canabis_user, alpha = 0.4))
+```
+
+```{r}
+df <- df[,c(1:11, 19, 33)]
+```
+
+# CART
+
+```{r}
+df2 <- df[, c(2:11,13)]
+```
+
+On crée notre échantillon d'entraînement et notre échantillon test.
+
+```{r}
+set.seed(12)
+
+training.idx <- createDataPartition(df2$canabis_user, p=0.7, list = FALSE)
+
+training <- df2[training.idx,]
+testing <- df2[-training.idx,]
+```
+
+## Exemple d'arbre
+
+On applique la méthode CART. On décide de laisser au minimum 100 observations par feuille.
+
+```{r}
+cart <- rpart(canabis_user ~ ., data = training, control=rpart.control(minsplit=100,cp=0))
+
+printcp(cart)
+
+prp(cart,extra=2)
+```
+
+On applique cet algorithme sur l'échantillon test, on obtient une accuracy de 0.78.
+
+```{r}
+pred <- predict(cart, testing, type = "class")
+
+tab <- table(testing$canabis_user,pred)
+
+tab
+
+sum(diag(tab)/(sum(rowSums(tab))))
+```
+
+## Optimisation du paramètre "nombre d'observations par feuille"
+
+
+On va tenter d'optimiser l'élagage de l'arbre, c'est-à-dire le paramètre cp. On part d'un arbre très long où l'on souhaite que les feuilles contiennent au minimum 10 observations. L'arbre est illisible, nous allons donc optimiser le paramètre d'élagage.
+
+```{r}
+cart <- rpart(canabis_user ~ ., data = training, control=rpart.control(minsplit=10,cp=0))
+
+prp(cart)
+```
+
+Le graphique suivant représente donc l'erreur relative en fonction du niveau d'élagage.
+
+```{r}
+plotcp(cart)
+```
+
+Ainsi, on choisi un niveau d'élagage optimale tel que le paramètre cp prend la valeur cp = 0.13
+
+
+On obtient donc l'arbre suivant
+
+```{r}
+cart <- rpart(canabis_user ~ ., data = training, control=rpart.control(minsplit=10,cp=0.013))
+
+prp(cart,extra=2)
+```
+On applique donc ce nouveau modèle à notre échantillon test et on obtient l'accuracy suivante : 0.80
+
+```{r}
+pred <- predict(cart, testing, type = "class")
+
+tab <- table(testing$canabis_user,pred)
+
+tab
+
+sum(diag(tab)/(sum(rowSums(tab))))
+```
+
+# Méthode des k plus proches voisins
+
+## KNN sur deux variables
+
+Pour introduire la méthode, on peut remarquer sur ce graphique que les gens les plus conscients et les moins ouverts semblent être moins aptes à être consommateur de canabis.
+
+```{r}
+ggplot(df) +
+    geom_point(aes(x = openess, y = conscientiousness, col = canabis_user), alpha = 0.5, size = 3)
+```
+
+On choisit un k égal à 15. Le fond correspond à la prédiction alors que les points correspondents aux données réelles sur tout l'échantillnon.
+
+```{r}
+x_scale <- 22:60
+y_scale <- 15:60
+k_value <- 15
+
+vec <- matrix(cbind(rep(x_scale, each = length(y_scale)),rep(y_scale, times = length(x_scale))), ncol=2)
+vec <- as.data.frame(vec)
+for (i in x_scale){
+  for (j in y_scale){
+    vec$predition[vec$V1 == i & vec$V2 == j] <- knn(df[,c(9,11)],c(i,j), cl=df[,13], k= k_value)
+  }
+}
+
+vec$predition <- as.factor(vec$predition)
+vec$id <- 1886:(1885+nrow(vec))
+
+df2 <- merge(df, vec, by = "id", all = T)
+
+ggplot(df2) +
+  geom_tile(aes(x = V1, y = V2, fill = predition)) +
+  geom_point(aes(x = openess, y = conscientiousness, col = canabis_user), size = 2, alpha = 0.5) +
+  scale_fill_manual(values=c("red4", "darkgreen")) +
+  scale_color_manual(values=c("red", "green")) +
+  xlab("Openess") +
+  ylab("Conscientiousness")
+```
+
+## KNN sur plus de deux variables
+
+Dans l'application précédente, nous n'avons utilisé que 2 variables quantitatives. Ici nous alors utiliser davantage de variable et aboutir à un algorithme qui pourra prédire la consommation de canabis.
+
+Pour éviter de donner du poids à certaines variables dans la méthode des k plus proches voisins, nous standardisons nos variables explicatives en soustrayant par la moyenne et en divisant par l'écart-type.
+
+On fait du "One hot encoding" sur chaque variable qualitative et on soustrait par la moyenne puis divise par l'écart-type.
+
+```{r}
+df$age_num <- df$age
+levels(df$age_num) <- c(21, 29, 39, 49, 59, 69)
+df$age_num <- as.numeric(df$age_num)
+
+for (i in c("neuroticism", "extraversion", "openess", "agreableness", "conscientiousness", "age_num")){
+  df[,paste("stand_", i, sep="")] <- (df[,i] - mean(df[, i]))/sd(df[, i])
+}
+
+df3 <- cbind(df, one_hot(as.data.table(df[, 3:6])))
+
+for (i in colnames(df3)[21:45]){
+  
+  df3[,paste("stand_", i, sep="")] <- (df3[,i] - mean(df3[, i]))/sd(df3[, i])
+  
+}
+```
+
+```{r}
+df4 <- df3[, c(1,13:18,20,46:70)]
+```
+
+On test avec k = 8 et on obtient une accuracy de 0.76.
+
+```{r}
+samp <- sample(1:nrow(df4), 0.7 * nrow(df4))
+
+training <- df4[samp,3:33] 
+
+testing <- df4[-samp,3:33] 
+
+training_y <- df4[samp,2]
+
+testing_y <- df4[-samp,2]
+
+pr <- knn(training, testing, cl=training_y, k=8)
+
+tab <- table(pr,testing_y)
+
+tab
+ 
+sum(diag(tab)/(sum(rowSums(tab))))
+```
+Trouver le k qui maximise l'accuracy
+
+```{r}
+knn_optimal <- function(k_values, n_echant){
+    result <- NULL
+    for (i in k_values){
+      vec <- NULL
+      for (j in 1:n_echant){
+        
+        samp <- sample(1:nrow(df4), 0.7 * nrow(df4))
+        training <- df4[samp,4:33] 
+        testing <- df4[-samp,4:33] 
+        training_y <- df4[samp,2]
+        testing_y <- df4[-samp,2]
+        
+        pr <- knn(training,testing,cl=training_y, k=i)
+        
+        tab <- table(pr,testing_y)
+         
+        sum(diag(tab)/(sum(rowSums(tab))))
+        
+        vec <- c(vec, sum(diag(tab)/(sum(rowSums(tab)))))
+        
+      }
+      result <- rbind(result, c(i, mean(vec)))
+    }
+      plot(result, xlab = "k value", ylab = "accuracy")
+}
+
+# knn_optimal(seq(10,180,15), 100) 
+knn_optimal(seq(10,180,15), 10)
+```
+
+Prenons par exemple l'algorithme KNN avec k = 140. On obtient une accuracy de 0.78.
+
+```{r}
+samp <- sample(1:nrow(df4), 0.7 * nrow(df4))
+
+training <- df4[samp,3:33] 
+
+testing <- df4[-samp,3:33] 
+
+training_y <- df4[samp,2]
+
+testing_y <- df4[-samp,2]
+
+pr <- knn(training,testing,cl=training_y, k = 160)
+
+tab <- table(pr,testing_y)
+ 
+sum(diag(tab)/(sum(rowSums(tab))))
+
+tab
+```
+
+# Bagging
+
+```{r}
+df$canabis_user2 <- ifelse(df$canabis_user == "User", 1, 0)
+```
+
+```{r}
+df5 <- df[, c(2:11,21)]
+```
+
+```{r}
+training.idx <- createDataPartition(df5$canabis_user2, p=0.7, list = FALSE)
+
+training <- df5[training.idx,]
+testing <- df5[-training.idx,]
+```
+
+```{r}
+trCtrl <- trainControl(method = "cv", number = 5)
+
+bag_fit <- train(canabis_user2~., data = training, method = "treebag",trControl = trCtrl)
+
+bag_fit
+
+pred <- predict(bag_fit, newdata = testing)
+
+pred2 <- round(pred)
+
+tab3 <- table(testing$canabis_user, pred2)
+
+tab3
+
+sum(diag(tab3)/(sum(rowSums(tab3))))
+```
+
+# Boosting
+
+```{r}
+df6 <- df[, c(2:11,13)]
+df6$canabis_user <- as.factor(df6$canabis_user)
+```
+
+```{r}
+training.idx <- createDataPartition(df6$canabis_user, p=0.7, list = FALSE)
+
+training <- df6[training.idx,]
+testing <- df6[-training.idx,]
+```
+
+```{r}
+boosting <- boosting(canabis_user ~ ., boos = T,data = training)
+
+pred <- predict(boosting,  newdata=testing)
+
+tab3 <- pred$confusion
+
+tab3
+
+sum(diag(tab3)/(sum(rowSums(tab3))))
+
+```
+# Random Forest
+
+```{r}
+df7 <- df[, c(2:11,21)]
+```
+
+
+```{r}
+training.idx <- createDataPartition(df7$canabis_user2, p=0.7, list = FALSE)
+
+training <- df7[training.idx,]
+testing <- df7[-training.idx,]
+```
+
+
+```{r}
+randomf <- randomForest(canabis_user2 ~ ., data = training, ntree= 200)
+
+pred <- predict(randomf,newdata= testing,type="class")
+
+pred3 <- round(pred)
+
+tab3 <- table(testing$canabis_user,pred3)
+
+tab3
+
+sum(diag(tab3)/(sum(rowSums(tab3))))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
