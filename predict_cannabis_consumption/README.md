@@ -1,0 +1,3 @@
+# Prédire la consommation de cannabis
+
+En utilisant un jeu de données préparé pour le Machine Learning, application de plusieurs algorithmes populaires tels que les KNN, Boosting, Bagging, Random Forest...
