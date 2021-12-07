@@ -1,2 +1,2 @@
-*.sas linguist-detectable=false
+*.sas linguist-detectable=true
 *.Rmd linguist-detectable=true
