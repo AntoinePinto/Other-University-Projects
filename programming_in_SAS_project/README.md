@@ -1,3 +1,3 @@
-# Programming in SAS
+# Programmation sous SAS
 
-The aim of this project was to develop programming skills in SAS through function creation and data preparation.
+L'objectif de ce projet est de développer des compétences en programmation sous SAS à partir de création de fonction et de préparation de données.
